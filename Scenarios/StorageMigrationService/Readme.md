@@ -32,7 +32,10 @@ FYI this is a work in progress
 ````PowerShell
 #Run command to enable functions the file is located under \Tools\ where the prereq.ps1 downloaded files
 . .\Convert-WindowsImage.ps1
+````
+You might need to make sure that BIOS is a setting
 
+````PowerShell
 #Create Base VHD/VHDX files on the diffrent type of OS you need.
 Convert-WindowsImage -SourcePath "2008R2 ISO Path" -Edition Enterprise -DiskLayout BIOS -VHDFormat VHD -VHDPath C:\HyperV\MigrationLab\ParentDisks\Win2008R2.vhd -SizeBytes 60GB -Passthru
 Convert-WindowsImage -SourcePath "2012 ISO Path" -Edition Datacenter -DiskLayout UEFI -VHDFormat VHDX -VHDPath C:\HyperV\MigrationLab\ParentDisks\Win2012.vhdx -SizeBytes 60GB -Passthru -RemoteDesktopEnable

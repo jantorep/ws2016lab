@@ -21,7 +21,7 @@ I decided to do more research, and I found PM who sent me an example script to e
 **Note :** If you dont have Win10, you can use CreateParentDisk.ps1 in tools folder to create Win10 VHD (use RS3 and newer) without creating all parent disks. You can also use insider previews to test new features!
 **Note2 :** During hydration of Win10 image, provide [RSAT package](http://aka.ms/RSAT), so you don't have to install it.
 ````PowerShell
-$LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'ws2016lab-'; SwitchName = 'LabSwitch'; DCEdition='DataCenter'; AdditionalNetworksConfig=@(); VMs=@(); ServerVHDs=@(); Internet=$True ; CreateClientParent=$true}
+$LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'WSLab-'; SwitchName = 'LabSwitch'; DCEdition='DataCenter'; AdditionalNetworksConfig=@(); VMs=@(); ServerVHDs=@(); Internet=$True ; CreateClientParent=$true; ClientEdition='Enterprise'}
 
 $LabConfig.VMs += @{ VMName = 'Management' ; Configuration = 'Simple' ; ParentVHD = 'Win10_G2.vhdx'  ; MemoryStartupBytes= 1GB ; AddToolsVHD=$True ; DisableWCF=$True }
 1..3 | % {"Win10_$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple' ; ParentVHD = 'Win10_G2.vhdx'  ; MemoryStartupBytes= 1GB ; AddToolsVHD=$false ; DisableWCF=$True } }
@@ -39,7 +39,7 @@ All actions will be performed from management machine. First we will configure p
 ````PowerShell
 #Run from hyper-V host to start Management machine
 
-Start-VM -VMName ws2016lab-Management
+Start-VM -VMName WSLab-Management
  
 ````
 
@@ -96,14 +96,16 @@ Microsoft recommends that you block the following Microsoft-signed applications 
 
 ````PowerShell
 #grab recommended xml blocklist from GitHub
-$content=Invoke-WebRequest -UseBasicParsing -Uri https://raw.githubusercontent.com/MicrosoftDocs/windows-itpro-docs/master/windows/security/threat-protection/device-guard/steps-to-deploy-windows-defender-application-control.md 
+#[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$content=Invoke-WebRequest -UseBasicParsing -Uri https://raw.githubusercontent.com/MicrosoftDocs/windows-itpro-docs/master/windows/security/threat-protection/windows-defender-application-control/microsoft-recommended-block-rules.md 
 
 #find start and end
 $XMLStart=$content.Content.IndexOf("<?xml version=")
 $XMLEnd=$content.Content.IndexOf("</SiPolicy>")+11 # 11 is lenght of string
 
 #create xml
-[xml]$XML=$content.Content.Substring($xmlstart,$XMLEnd-$XMLStart)
+$content=$content.Content.Substring($xmlstart,$XMLEnd-$XMLStart) #find XML part
+[xml]$XML=$content.Replace("- <","  <") #fix xml as it contains unwanted characters and save it to XML variable
 $XML.Save("$env:TEMP\blocklist.xml")
 
 #add to MyPolicy.xml
@@ -197,7 +199,7 @@ And you can start other VMs and see if settings are applied.
 ````PowerShell
 #Run from hyper-V host to start Management machine
 
-Start-VM -VMName ws2016lab-Win10_*
+Start-VM -VMName WSLab-Win10_*
  
 ````
 

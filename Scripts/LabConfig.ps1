@@ -1,6 +1,6 @@
-﻿#basic config, that creates VMs for S2D Hyperconverged scenario https://github.com/Microsoft/ws2016lab/tree/master/Scenarios/S2D%20Hyperconverged
+﻿#basic config, that creates VMs for S2D Hyperconverged scenario https://github.com/Microsoft/WSLab/tree/master/Scenarios/S2D%20Hyperconverged
 
-$LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'ws2016lab-'; SwitchName = 'LabSwitch'; DCEdition='4'; AdditionalNetworksConfig=@(); VMs=@(); ServerVHDs=@()}
+$LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'WSLab-'; SwitchName = 'LabSwitch'; DCEdition='4'; AdditionalNetworksConfig=@(); VMs=@(); ServerVHDs=@()}
 1..4 | ForEach-Object {$VMNames="S2D"; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'S2D' ; ParentVHD = 'Win2016Core_G2.vhdx'; SSDNumber = 0; SSDSize=800GB ; HDDNumber = 12; HDDSize= 4TB ; MemoryStartupBytes= 512MB }} 
 
 ### HELP ###
@@ -12,7 +12,7 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
     $LabConfig=@{
         DomainAdminName='LabAdmin';            # Used during 2_CreateParentDisks (no affect if changed after this step)
         AdminPassword='LS1setup!';             # Used during 2_CreateParentDisks. If changed after, it will break the functionality of 3_Deploy.ps1
-        Prefix = 'ws2016lab-';                 # All VMs and vSwitch are created with this prefix, so you can identify the lab
+        Prefix = 'WSLab-';                 # All VMs and vSwitch are created with this prefix, so you can identify the lab
         SwitchName = 'LabSwitch';              # Name of vSwitch
         SecureBoot=$true;                      # (Optional) Useful when testing unsigned builds (Useful for MS developers for daily builds)
         DCEdition='4';                         # 4 for DataCenter or 3 for DataCenterCore (or if you prefer standard or if you use SAC, use 1 or 2 image index numbers)
@@ -48,8 +48,7 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
             SSDSize=800GB ;                            # Size of "SSDs"
             HDDNumber = 12;                            # Number of "HDDs"
             HDDSize= 4TB ;                             # Size of "HDDs"
-            MemoryStartupBytes= 512MB                  # Startup memory size
-            VMProcessorCount = 2                       # (Optional) Number of Processors in VM.
+            MemoryStartupBytes= 512MB;                 # Startup memory size
         }
     }
 
@@ -64,15 +63,20 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
     $LABConfig.AdditionalNetworksConfig += @{ NetName = 'Storage3'; NetAddress='172.16.3.'; NetVLAN='3'; Subnet='255.255.255.0'}
 
     #optional: (these are defaults images that will be created during 2_CreateParentDisks.ps1. If nothing is specified, the below config is automatically used)
-    $LABConfig.ServerVHDs += @{
-        Edition="DataCenterCore";
-        VHDName="Win2016Core_G2.vhdx";
+    $LabConfig.ServerVHDs += @{
+        Edition="4" 
+        VHDName="Win2016_G2.vhdx"
+        Size=60GB
+    }
+    $LabConfig.ServerVHDs += @{
+        Edition="3" 
+        VHDName="Win2016Core_G2.vhdx"
         Size=30GB
     }
-    $LABConfig.ServerVHDs += @{
-        Edition="DataCenterNano";
-        VHDName="Win2016NanoHV_G2.vhdx";
-        NanoPackages="Microsoft-NanoServer-DSC-Package","Microsoft-NanoServer-FailoverCluster-Package","Microsoft-NanoServer-Guest-Package","Microsoft-NanoServer-Storage-Package","Microsoft-NanoServer-SCVMM-Package","Microsoft-NanoServer-Compute-Package","Microsoft-NanoServer-SCVMM-Compute-Package","Microsoft-NanoServer-SecureStartup-Package","Microsoft-NanoServer-DCB-Package","Microsoft-NanoServer-ShieldedVM-Package";
+    $LabConfig.ServerVHDs += @{ 
+        Edition="DataCenterNano"
+        VHDName=$NanoServerVHDName
+        NanoPackages="Microsoft-NanoServer-DSC-Package","Microsoft-NanoServer-FailoverCluster-Package","Microsoft-NanoServer-Guest-Package","Microsoft-NanoServer-Storage-Package","Microsoft-NanoServer-SCVMM-Package","Microsoft-NanoServer-Compute-Package","Microsoft-NanoServer-SCVMM-Compute-Package","Microsoft-NanoServer-SecureStartup-Package","Microsoft-NanoServer-DCB-Package","Microsoft-NanoServer-ShieldedVM-Package"
         Size=30GB
     }
 
@@ -255,15 +259,24 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
     AddToolsVHD (Optional)
         If $True, then ToolsVHD will be added
 
-    SkipDjoin (Optional)
-        If $True, VM will not be djoined.
+    Unattend
+        Example: Unattend="DjoinCred"
+        Possible values: "DjoinBlob", "DjoinCred", "NoDjoin", "None"
+        Default "DjoinBlob"
+        "DjoinBlob" uses blob, can be consumed only by Windows Server 2016+
+        "DjoinCred" uses credentials. Can be used in 2008+
+        "NoDjoin" inserts just local admin. For win10 use also AdditionalLocalAdmin
+        "None" does not inject any unattend.
+
+    SkipDjoin (Optional,Deprecated)
+        If $True, VM will not be djoined. Default unattend used.
         Note: you might want to use AdditionalLocalAdmin variable with Windows 10 as local administrator account is by default disabled there.
         
-    Win2012Djoin (Optional)
+    Win2012Djoin (Optional,Deprecated)
         If $True, older way to domain join will be used (Username and Password in Answer File instead of blob) as Djoin Blob works only in Win 2016
 
     vTPM (Optional)
-        if $true, vTPM will be enabled for virtual machine.
+        if $true, vTPM will be enabled for virtual machine. Gen2 only.
 
     MGMTNICs (Optional)
         Number of management NIC.
@@ -272,7 +285,7 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
     DisableWCF (Optional)
         If $True, then Disable Windows Consumer Features registry is added= no consumer apps in start menu.
 
-    AdditionalLocalAdmin (Optional, depends on SkipDjoin)
+    AdditionalLocalAdmin (Optional, only applies if Unattend="NoDjoin")
         Example AdditionalLocalAdmin='Ned'
         Works only with SkipDjoin as you usually don't need additional local account
         When you skipDjoin on Windows10 and local administrator is disabled. Then AdditionalLocalAdmin is useful
@@ -280,6 +293,19 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
     VMProcessorCount (Optional)
         Example VMProcessorCount=8
         Number of Processors in VM. If specified more than available in host, maximum possible number will be used.
+
+    Generation (Optional)
+        Example Generation=1
+        If not specified, then it's 2. If 1, then its 1. Easy.
+    
+    EnableWinRM (Optional)
+        Example EnableWinRM=$True
+        If $true, then synchronous command winrm quickconfig -force -q will be run
+        Only useful for 2008 and Win10
+    
+    CustomPowerShellCommands (Optional)
+        Example (single command) CustomPowerShellCommands="New-Item -Name Temp -Path c:\ -ItemType Directory"
+        Example (multiple commands) CustomPowerShellCommands="New-Item -Name Temp -Path c:\ -ItemType Directory","New-Item -Name Temp1 -Path c:\ -ItemType Directory"
 
     #>
 #endregion
@@ -314,7 +340,7 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
 
     Edition
         Edition of VHD, consumed by convert-windowsimage
-        possible values: DatacenterNano, DatacenterCore, Datacenter, StandardNano, StandardCore, Standard
+        possible values: DatacenterNano, DatacenterCore, Datacenter, StandardNano, StandardCore, Standard or numbers
 
     VHDName
         Name of VHD that will be created
@@ -349,17 +375,21 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
         1..100 | % {"NanoServer$_"}  | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'   ; ParentVHD = 'Win2016NanoHV_G2.vhdx'    ; MemoryStartupBytes= 512MB } }
         1..100 | % {"Windows10_$_"}  | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'   ; ParentVHD = 'Win10_G2.vhdx'          ; MemoryStartupBytes= 512MB ;   AddToolsVHD=$True ; DisableWCF=$True } }
 
-    or Several different servers 
+    or Several different VMs 
         * you need to provide your GPT VHD for win 2012 (like created with convertwindowsimage script)
-        $LabConfig.VMs += @{ VMName = 'Win2016'        ; Configuration = 'Simple'   ; ParentVHD = 'Win2016_G2.vhdx'          ; MemoryStartupBytes= 512MB ; SkipDjoin=$True }
-        $LabConfig.VMs += @{ VMName = 'Win2016_Core'   ; Configuration = 'Simple'   ; ParentVHD = 'Win2016Core_G2.vhdx'      ; MemoryStartupBytes= 512MB }
-        $LabConfig.VMs += @{ VMName = 'Win2016_Nano'   ; Configuration = 'Simple'   ; ParentVHD = 'Win2016NanoHV_G2.vhdx'    ; MemoryStartupBytes= 256MB }
-        $LabConfig.VMs += @{ VMName = 'Win2012R2'      ; Configuration = 'Simple'   ; ParentVHD = 'Win2012r2_G2.vhdx'        ; MemoryStartupBytes= 512MB ; Win2012Djoin=$True }
-        $LabConfig.VMs += @{ VMName = 'Win2012R2_Core' ; Configuration = 'Simple'   ; ParentVHD = 'Win2012r2Core_G2.vhdx'    ; MemoryStartupBytes= 512MB ; Win2012Djoin=$True }
+        $LabConfig.VMs += @{ VMName = 'Win10'            ; Configuration = 'Simple'   ; ParentVHD = 'Win10_G2.vhdx'            ; MemoryStartupBytes= 512MB ; DisableWCF=$True ; vTPM=$True ; EnableWinRM=$True }
+        $LabConfig.VMs += @{ VMName = 'Win10_OOBE'       ; Configuration = 'Simple'   ; ParentVHD = 'Win10_G2.vhdx'            ; MemoryStartupBytes= 512MB ; DisableWCF=$True ; vTPM=$True ; Unattend="None" }
+        $LabConfig.VMs += @{ VMName = 'Win10_NotInDomain'; Configuration = 'Simple'   ; ParentVHD = 'Win10_G2.vhdx'            ; MemoryStartupBytes= 512MB ; DisableWCF=$True ; vTPM=$True ; Unattend="NoDjoin" ; AdditionalLocalAdmin="Ned" }
+        $LabConfig.VMs += @{ VMName = 'Win2016'          ; Configuration = 'Simple'   ; ParentVHD = 'Win2016_G2.vhdx'          ; MemoryStartupBytes= 512MB ; Unattend="NoDjoin" }
+        $LabConfig.VMs += @{ VMName = 'Win2016_Core'     ; Configuration = 'Simple'   ; ParentVHD = 'Win2016Core_G2.vhdx'      ; MemoryStartupBytes= 512MB }
+        $LabConfig.VMs += @{ VMName = 'Win2016_Nano'     ; Configuration = 'Simple'   ; ParentVHD = 'Win2016NanoHV_G2.vhdx'    ; MemoryStartupBytes= 256MB }
+        $LabConfig.VMs += @{ VMName = 'Win2012R2'        ; Configuration = 'Simple'   ; ParentVHD = 'Win2012r2_G2.vhdx'        ; MemoryStartupBytes= 512MB ; Unattend="DjoinCred" }
+        $LabConfig.VMs += @{ VMName = 'Win2012R2_Core'   ; Configuration = 'Simple'   ; ParentVHD = 'Win2012r2Core_G2.vhdx'    ; MemoryStartupBytes= 512MB ; Unattend="DjoinCred" }
+        $LabConfig.VMs += @{ VMName = 'Win2008R2_Core'   ; Configuration = 'Simple'   ; ParentVHD = 'Win2008R2.vhdx'           ; MemoryStartupBytes= 512MB ; Unattend="DjoinCred" ; Generation = 1}
 
     Example with sets of different DSC Configs
-        1..2 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = ‘Simple’    ; ParentVHD = ‘Win2016NanoHV_G2.vhdx’    ; MemoryStartupBytes= 256MB ; DSCMode=‘Pull’; DSCConfig=@(‘LAPS_Nano_Install’,‘LAPSConfig1’)} }
-        3..4 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = ‘Simple’    ; ParentVHD = ‘Win2016NanoHV_G2.vhdx’    ; MemoryStartupBytes= 256MB ; DSCMode=‘Pull’; DSCConfig=@(‘LAPS_Nano_Install’,‘LAPSConfig2’)} }
+        1..2 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx'    ; MemoryStartupBytes= 256MB ; DSCMode='Pull'; DSCConfig=@('LAPS_Nano_Install','LAPSConfig1')} }
+        3..4 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx'    ; MemoryStartupBytes= 256MB ; DSCMode='Pull'; DSCConfig=@('LAPS_Nano_Install','LAPSConfig2')} }
         1..6 | % {"DSC$_"}  | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx' ; MemoryStartupBytes= 512MB ; DSCMode='Pull'; DSCConfig=@('Config1','Config2')} }
         7..12| % {"DSC$_"}  | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx' ; MemoryStartupBytes= 512MB ; DSCMode='Pull'; DSCConfig='Config3'} }
 
@@ -382,14 +412,14 @@ $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'w
         1..4 | % {"SOFS$_"}     | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Shared'   ; ParentVHD = 'Win2016NanoHV_G2.vhdx'     ; SSDNumber = 4; SSDSize=800GB ; HDDNumber = 8  ; HDDSize= 4TB ; MemoryStartupBytes= 512MB ; VMSet= 'SharedLab1'} }
 
     ShieldedVMs lab
-        $LABConfig.VMs += @{ VMName = 'HGS' ; Configuration = 'Simple'   ; ParentVHD = 'Win2016Core_G2.vhdx'    ; MemoryStartupBytes= 512MB ; SkipDjoin=$True }
+        $LABConfig.VMs += @{ VMName = 'HGS' ; Configuration = 'Simple'   ; ParentVHD = 'Win2016Core_G2.vhdx'    ; MemoryStartupBytes= 512MB ; Unattend="NoDjoin" }
         1..2 | % { $VMNames="Compute" ; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'Simple'   ; ParentVHD = 'Win2016NanoHV_G2.vhdx'   ; MemoryStartupBytes= 2GB ; NestedVirt=$True ; vTPM=$True  } }
 
     Windows Server 2012R2 Hyper-V (8x4TB CSV + 1 1G Witness)
-        1..8 | % {"Node$_"}  | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = 'Shared'   ; ParentVHD = 'win2012r2Core_G2.vhdx'   ; SSDNumber = 1; SSDSize=1GB ; HDDNumber = 8  ; HDDSize= 4TB ; MemoryStartupBytes= 512MB ; VMSet= 'HyperV2012R2Lab' ;Win2012Djoin=$True } }
+        1..8 | % {"Node$_"}  | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = 'Shared'   ; ParentVHD = 'win2012r2Core_G2.vhdx'   ; SSDNumber = 1; SSDSize=1GB ; HDDNumber = 8  ; HDDSize= 4TB ; MemoryStartupBytes= 512MB ; VMSet= 'HyperV2012R2Lab' ;Unattend="DjoinCred" } }
 
     Windows Server 2012R2 Storage Spaces
-        1..2 | % {"2012r2Spaces$_"}     | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Shared'   ; ParentVHD = 'win2012r2Core_G2.vhdx'     ; SSDNumber = 4; SSDSize=800GB ; HDDNumber = 8  ; HDDSize= 4TB ; MemoryStartupBytes= 512MB ; VMSet= '2012R2SpacesLab';Win2012Djoin=$True } }
+        1..2 | % {"2012r2Spaces$_"}     | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Shared'   ; ParentVHD = 'win2012r2Core_G2.vhdx'     ; SSDNumber = 4; SSDSize=800GB ; HDDNumber = 8  ; HDDSize= 4TB ; MemoryStartupBytes= 512MB ; VMSet= '2012R2SpacesLab';Unattend="DjoinCred" } }
 
     #>
 #endregion

@@ -1,4 +1,4 @@
-﻿#basic config, that creates VMs for S2D Hyperconverged scenario https://github.com/Microsoft/ws2016lab/tree/master/Scenarios/S2D%20Hyperconverged
+﻿#basic config, that creates VMs for S2D Hyperconverged scenario https://github.com/Microsoft/WSLab/tree/master/Scenarios/S2D%20Hyperconverged
 
 $LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; Prefix = 'ws2019Migration-'; SwitchName = 'LabSwitch'; DCEdition='ServerDataCenter'; PullServerDC=$false ;Internet=$true; InstallSCVMM='no'; CreateClientParent=$false ; ClientEdition='Enterprise'; AdditionalNetworksConfig=@(); VMs=@(); ServerVHDs=@() }  
 
@@ -27,7 +27,7 @@ $LabConfig.VMs = @(
     $LabConfig=@{
         DomainAdminName='LabAdmin';            # Used during 2_CreateParentDisks (no affect if changed after this step)
         AdminPassword='LS1setup!';             # Used during 2_CreateParentDisks. If changed after, it will break the functionality of 3_Deploy.ps1
-        Prefix = 'ws2016lab-';                 # All VMs and vSwitch are created with this prefix, so you can identify the lab
+        Prefix = 'WSLab-';                 # All VMs and vSwitch are created with this prefix, so you can identify the lab
         SwitchName = 'LabSwitch';              # Name of vSwitch
         SecureBoot=$true;                      # (Optional) Useful when testing unsigned builds (Useful for MS developers for daily builds)
         DCEdition='4';                         # 4 for DataCenter or 3 for DataCenterCore (or if you prefer standard or if you use SAC, use 1 or 2 image index numbers)
@@ -398,8 +398,8 @@ $LabConfig.VMs = @(
         $LabConfig.VMs += @{ VMName = 'Win2008R2_Core'   ; Configuration = 'Simple'   ; ParentVHD = 'Win2008R2.vhdx'           ; MemoryStartupBytes= 512MB ; Unattend="DjoinCred" ; Generation = 1}
 
     Example with sets of different DSC Configs
-        1..2 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = ‘Simple’    ; ParentVHD = ‘Win2016NanoHV_G2.vhdx’    ; MemoryStartupBytes= 256MB ; DSCMode=‘Pull’; DSCConfig=@(‘LAPS_Nano_Install’,‘LAPSConfig1’)} }
-        3..4 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = ‘Simple’    ; ParentVHD = ‘Win2016NanoHV_G2.vhdx’    ; MemoryStartupBytes= 256MB ; DSCMode=‘Pull’; DSCConfig=@(‘LAPS_Nano_Install’,‘LAPSConfig2’)} }
+        1..2 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx'    ; MemoryStartupBytes= 256MB ; DSCMode='Pull'; DSCConfig=@('LAPS_Nano_Install','LAPSConfig1')} }
+        3..4 | % {"Nano$_"} | % { $LABConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx'    ; MemoryStartupBytes= 256MB ; DSCMode='Pull'; DSCConfig=@('LAPS_Nano_Install','LAPSConfig2')} }
         1..6 | % {"DSC$_"}  | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx' ; MemoryStartupBytes= 512MB ; DSCMode='Pull'; DSCConfig=@('Config1','Config2')} }
         7..12| % {"DSC$_"}  | % { $LabConfig.VMs += @{ VMName = $_ ; Configuration = 'Simple'    ; ParentVHD = 'Win2016NanoHV_G2.vhdx' ; MemoryStartupBytes= 512MB ; DSCMode='Pull'; DSCConfig='Config3'} }
 

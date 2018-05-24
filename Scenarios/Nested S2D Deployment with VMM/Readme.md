@@ -5,6 +5,7 @@
     - [Prerequisites](#prerequisites)
     - [Running the Script](#Running-the-Script)
     - [Result](#Result)
+    - [Issues](#Issues)
 
 <!-- /TOC -->
 
@@ -29,3 +30,6 @@ You can run the script 2 ways. As one big script or in steps. I do recomend to r
 
 The result will be a fully functional S2D cluster with 1 virtualdisk pr node you deploy with 40GB usable diskspace. You will be able to test new features, like Dedupe, if you deploy more Clusters you can setup Cluster Sets.
 
+## Issues
+
+The latest version of Insider Build is having an issue with creating a cluster remotly.

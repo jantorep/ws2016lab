@@ -67,6 +67,8 @@ $LabConfig.VMs = @(
 
 # The lab
 
+A requierment for this lab is to first have knowledge on how to use the WSLAB solution on how to configure the labconfig.ps1 script. You will need to define the servers you want in. Storage Migration Service only 
+
 The lab begins with setting up the servers you defined in the Labconfig.ps1 script and running the Deploy.ps1 script.
 
 After the deploy script has run it's course run the following powershell command to start the vm's
@@ -74,9 +76,10 @@ After the deploy script has run it's course run the following powershell command
 ````PowerShell
 Get-VM | Where-Object {$_.State –EQ 'Off'} | Start-VM
 ````
+Logon to the 2008R2 server to enable the winrm bit's for PS remoting.
 
-After this copy in the files Scenario.ps1, installchrome.ps1 and iisstart.htm to c:\scripts on ws2019Migration-DC
-Copy also in the latest Windows Admin Center file to c:\scripts on the domain controller
+After this copy in the files Scenario.ps1, installchrome.ps1 and iisstart.htm to D:\scripts on ws2019Migration-DC
+Copy also in the latest Windows Admin Center file to D:\scripts on the domain controller
 
 Continue with [Scenario.ps1](/Scenarios/StorageMigrationService/scenario.ps1) script while reading comments.
 
@@ -88,3 +91,8 @@ Continue with [Scenario.ps1](/Scenarios/StorageMigrationService/scenario.ps1) sc
 **Scenario script finished in ~10 minutes**
 
 ![](/Scenarios/StorageMigrationService/screenshots/scenarioscriptfinished.png)
+
+
+# Configure Storage Migration Service in Windows Admin Center
+
+Once your lab is up and running. Login to the Windows Admin Center webpage from the Domain Controller

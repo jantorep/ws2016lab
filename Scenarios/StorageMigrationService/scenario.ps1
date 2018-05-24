@@ -13,6 +13,9 @@ If (!( $isAdmin )) {
 $StartDateTime = get-date
 Write-host "Scripts started at $StartDateTime"
 
+#Insert Variables for your script here
+
+$WACEXE = "WindowsAdminCenter1804.msi"
 #Set PSScriptRoot
 $PSScriptRootFolder = "D:\Scripts"
 
@@ -23,7 +26,6 @@ $WAC = 'WAC'
 $SMS_2008R2 = 'SMS2008R2'
 $SMS_2012R2 = 'SMS_2012R2'
 $SMS_2019 = 'SMS_2019'
-
 $Servers = ($WAC, $SMS_2012R2, $SMS_2019)
 
 #Enable firewall rules for servers
@@ -68,11 +70,11 @@ Invoke-Command -Computername $WAC -ScriptBlock {
     mkdir C:\Scripts\
 }
 
-Copy-Item "$PSScriptRootFolder\WindowsAdminCenter1804.msi" -Destination "\\WAC\c$\Scripts"
+Copy-Item "$PSScriptRootFolder\$WACEXE" -Destination "\\WAC\c$\Scripts"
 
 Invoke-Command -Computername $WAC -ScriptBlock {
 
-    Start-Process msiexec.exe -Wait -ArgumentList '/I C:\Scripts\WindowsAdminCenter1804.msi /qn /L*v log.txt SME_PORT=9999 SSL_CERTIFICATE_OPTION=generate'
+    Start-Process msiexec.exe -Wait -ArgumentList '/I C:\Scripts\$WACEXE /qn /L*v log.txt SME_PORT=9999 SSL_CERTIFICATE_OPTION=generate'
     New-NetFirewallRule -Name WAC -DisplayName WAC -Enabled True -Profile any -Action Allow -Direction Inbound -Protocol tcp -LocalPort 9999
 }
 
